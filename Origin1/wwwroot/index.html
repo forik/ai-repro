@@ -1,0 +1,61 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+
+<script>
+    webSocket = null;
+
+    function sendWs() {
+
+        if (!webSocket){
+            webSocket = new WebSocket('ws://localhost:5000/ws');
+            webSocket.onerror = ev => {
+                console.error(ev);
+            }
+            webSocket.onopen = ev => {
+                console.log(ev);
+            }
+        }
+        
+        // Construct a msg object containing the data the server needs to process the message from the chat client.
+        var msg = {
+            type: "message",
+            text: "Test message",
+            id:   "test",
+            date: Date.now()
+        };
+
+        // Send the msg object as a JSON-formatted string.
+        webSocket.send(JSON.stringify(msg));
+    }
+
+    async function sendRest() {
+
+        // Construct a msg object containing the data the server needs to process the message from the chat client.
+        var msg = {
+            type: "message",
+            text: "Test message",
+            id:   "test",
+            date: Date.now()
+        };
+
+        await fetch('/rest', {
+            method: "POST",
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(msg)
+        })
+    }
+</script>
+
+<body>
+
+<button onclick="sendWs()">Send WS</button>
+<button onclick="sendRest()">Send Rest</button>
+
+</body>
+</html>
