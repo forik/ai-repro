@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Buffers;
+using System.Diagnostics;
 using System.IO;
 using System.Net.WebSockets;
 using System.Text;
@@ -13,20 +14,17 @@ namespace Origin1.WebSockets
     public class ReproWebSocketMiddleware
     {
         private readonly ILogger<ReproWebSocketHandler> _logger;
-        private readonly ReproWebSocketHandler _handler;
         private readonly RequestDelegate _next;
 
         public ReproWebSocketMiddleware(
             ILogger<ReproWebSocketHandler> logger,
-            ReproWebSocketHandler handler,
             RequestDelegate next)
         {
             _logger = logger;
-            _handler = handler;
             _next = next;
         }
         
-        public async Task Invoke(HttpContext context)
+        public async Task Invoke(HttpContext context, ReproWebSocketHandler handler)
         {
             try
             {
@@ -37,7 +35,7 @@ namespace Origin1.WebSockets
                 }
 
                 WebSocket socket = await context.WebSockets.AcceptWebSocketAsync().ConfigureAwait(false);
-                await Receive(socket, context.RequestAborted);
+                await Receive(socket, handler, context.RequestAborted);
             }
             catch (Exception ex)
             {
@@ -46,7 +44,8 @@ namespace Origin1.WebSockets
         }
         
         
-        private async Task Receive(WebSocket socket, CancellationToken contextRequestAborted)    //, Action<WebSocketReceiveResult, string> handleMessage)
+        private async Task Receive(WebSocket socket, ReproWebSocketHandler handler,
+            CancellationToken contextRequestAborted)    //, Action<WebSocketReceiveResult, string> handleMessage)
         {
             while (socket.State == WebSocketState.Open)
             {
@@ -82,8 +81,15 @@ namespace Origin1.WebSockets
                 {
                     ArrayPool<byte>.Shared.Return(bytes);
                 }
+                
+                var acitvity = new Activity("Test");
+                acitvity.Start();
+                
+                Console.WriteLine("Activity: {0}", acitvity.Id);
 
-                await _handler.HandleAsync(serializedMessage);
+                await handler.HandleAsync(serializedMessage);
+
+                acitvity.Stop();
             }
         }
     }

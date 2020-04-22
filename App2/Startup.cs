@@ -28,10 +28,7 @@ namespace App2
             services.AddApplicationInsightsTelemetry();
             
             services.AddControllers();
-            services.AddHttpClient<App3Client>(client =>
-            {
-                client.BaseAddress = new Uri(Configuration["Dependency"]);
-            });
+            services.AddHttpClient<App3Client>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
